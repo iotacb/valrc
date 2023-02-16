@@ -1,0 +1,17 @@
+{
+	"name": "valrc",
+	"version": "1.0.2",
+	"description": "Small CLI to import React components and other files (This is a private CLI for my own use)",
+	"main": "index.js",
+	"bin": "./index.js",
+	"type": "module",
+	"author": "Christopher Brandt",
+	"license": "MIT",
+	"dependencies": {
+		"command-line-args": "^5.2.1",
+		"inquire": "^0.4.8",
+		"inquirer": "^9.1.4",
+		"nanospinner": "^1.1.0",
+		"ncp": "^2.0.0"
+	}
+}
