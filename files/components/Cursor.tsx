@@ -11,6 +11,7 @@ export default function Cursor({ size = 20 }: Props) {
 	const { type, image, hidden, setHidden } = useContext(CursorContext);
 	const mouseX = useMotionValue(0);
 	const mouseY = useMotionValue(0);
+
 	const scale = useMotionValue(0);
 
 	const springMouseX = useSpring(mouseX, {

@@ -1,11 +1,19 @@
 #!/usr/bin/env node
 
 import fs from "fs";
+import { readFile } from "fs/promises";
 import inquirer from "inquirer";
+import path from "path";
+import { fileURLToPath } from "url";
 import ncp from "ncp";
 import { promisify } from "util";
+import chalk from "chalk";
+import figlet from "figlet";
 
 const copy = promisify(ncp);
+const json = JSON.parse(
+	await readFile(new URL("./package.json", import.meta.url))
+);
 
 let selectedDir;
 let selectedFile;
@@ -13,8 +21,12 @@ let dirs = [];
 let files = [];
 
 async function readDirectories() {
+	const filesDirectory = path.resolve(
+		fileURLToPath(import.meta.url),
+		"../files"
+	);
 	// Read directories
-	dirs = fs.readdirSync("./files");
+	dirs = fs.readdirSync(filesDirectory);
 	// Capitalize first letter of each directory
 	dirs = dirs.map((dir) => {
 		return dir.charAt(0).toUpperCase() + dir.slice(1);
@@ -22,8 +34,12 @@ async function readDirectories() {
 }
 
 async function readFilesOfDir() {
+	const filesDirectory = path.resolve(
+		fileURLToPath(import.meta.url),
+		`../files/${selectedDir}`
+	);
 	// Read files of selected directory
-	let filesOfDir = fs.readdirSync(`./files/${selectedDir}`);
+	let filesOfDir = fs.readdirSync(filesDirectory);
 
 	// Add file of directory to files array
 	filesOfDir.forEach((file) => {
@@ -67,7 +83,12 @@ async function copyFile() {
 					targetDirectory: `${process.cwd()}/${importFolder}/${file}`,
 				};
 
-				copy(`./files/${selectedDir}/${file}`, options.targetDirectory, {
+				const filesDirectory = path.resolve(
+					fileURLToPath(import.meta.url),
+					`../files/${selectedDir}/${file}`
+				);
+
+				copy(filesDirectory, options.targetDirectory, {
 					clobber: false,
 				});
 			}
@@ -77,11 +98,27 @@ async function copyFile() {
 			targetDirectory: `${process.cwd()}/${importFolder}/${selectedFile}`,
 		};
 
-		copy(`./files/${selectedDir}/${selectedFile}`, options.targetDirectory, {
+		const filesDirectory = path.resolve(
+			fileURLToPath(import.meta.url),
+			`../files/${selectedDir}/${selectedFile}`
+		);
+
+		copy(filesDirectory, options.targetDirectory, {
 			clobber: false,
 		});
 	}
 }
+
+console.clear();
+
+console.log(
+	chalk.cyan.bold(
+		figlet.textSync("VALRC", {
+			horizontalLayout: "full",
+			verticalLayout: "full",
+		})
+	)
+);
 
 await readDirectories();
 await askDir();
