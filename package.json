@@ -1,6 +1,6 @@
 {
 	"name": "valrc",
-	"version": "1.0.5",
+	"version": "1.0.6",
 	"description": "Small CLI to import React components and other files (This is a private CLI for my own use)",
 	"main": "index.js",
 	"bin": "./index.js",
@@ -10,6 +10,13 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
+	"files": [
+		"index.js",
+		"package.json",
+		"package-lock.json",
+		"default.config.json",
+		"/files"
+	],
 	"dependencies": {
 		"chalk": "^5.2.0",
 		"command-line-args": "^5.2.1",

@@ -9,11 +9,15 @@ import ncp from "ncp";
 import { promisify } from "util";
 import chalk from "chalk";
 import figlet from "figlet";
+import { createSpinner } from "nanospinner";
+
+function delay(time) {
+	return new Promise((resolve) => setTimeout(resolve, time));
+}
 
 const copy = promisify(ncp);
-const json = JSON.parse(
-	await readFile(new URL("./package.json", import.meta.url))
-);
+
+let config = {};
 
 let selectedDir;
 let selectedFile;
@@ -71,13 +75,13 @@ async function askFile() {
 }
 
 async function copyFile() {
-	const importFolder = "v-imports";
+	const importFolder = config.importFolder;
 	if (!fs.existsSync(importFolder)) {
 		fs.mkdirSync(importFolder);
 	}
 
 	if (selectedFile === "All") {
-		files.forEach((file) => {
+		files.forEach(async (file) => {
 			if (file !== "All") {
 				const options = {
 					targetDirectory: `${process.cwd()}/${importFolder}/${file}`,
@@ -88,8 +92,14 @@ async function copyFile() {
 					`../files/${selectedDir}/${file}`
 				);
 
-				copy(filesDirectory, options.targetDirectory, {
+				const copySpinner = createSpinner(`Importing ${file}`).start();
+				await copy(filesDirectory, options.targetDirectory, {
 					clobber: false,
+				});
+				copySpinner.success({
+					text: `Imported ${chalk.cyan(file)} to ${chalk.cyan(
+						options.targetDirectory
+					)}`,
 				});
 			}
 		});
@@ -103,14 +113,50 @@ async function copyFile() {
 			`../files/${selectedDir}/${selectedFile}`
 		);
 
-		copy(filesDirectory, options.targetDirectory, {
+		const copySpinner = createSpinner(`Importing ${selectedFile}`).start();
+		await copy(filesDirectory, options.targetDirectory, {
 			clobber: false,
+		});
+		copySpinner.success({
+			text: `Imported ${chalk.cyan(selectedFile)} to ${chalk.cyan(
+				options.targetDirectory
+			)}`,
 		});
 	}
 }
 
-console.clear();
+async function checkConfigFile() {
+	const configSpinnerCheck = createSpinner("Checking config file...");
+	configSpinnerCheck.start();
 
+	const configFile = path.resolve(
+		fileURLToPath(import.meta.url),
+		"../valrc.config.json"
+	);
+
+	if (!fs.existsSync(configFile)) {
+		configSpinnerCheck.warn({ text: "Config file not found" });
+
+		// create config file
+		const configSpinnerCreate = createSpinner("Creating config file...");
+		configSpinnerCreate.start();
+
+		const pathDir = path.resolve(
+			fileURLToPath(import.meta.url),
+			`../default.config.json`
+		);
+
+		await copy(pathDir, `${process.cwd()}/valrc.config.json`, {
+			clobber: false,
+		});
+
+		configSpinnerCreate.success({ text: "Config file created" });
+	} else {
+		configSpinnerCheck.success({ text: "Config found!" });
+	}
+}
+
+console.clear();
 console.log(
 	chalk.cyan.bold(
 		figlet.textSync("VALRC", {
@@ -120,8 +166,15 @@ console.log(
 	)
 );
 
-await readDirectories();
-await askDir();
-await readFilesOfDir();
-await askFile();
-await copyFile();
+await checkConfigFile().then(async () => {
+	config = JSON.parse(
+		await readFile(
+			path.resolve(fileURLToPath(import.meta.url), `../valrc.config.json`)
+		)
+	);
+	await readDirectories();
+	await askDir();
+	await readFilesOfDir();
+	await askFile();
+	await copyFile();
+});
